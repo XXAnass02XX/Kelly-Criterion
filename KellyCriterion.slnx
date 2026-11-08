@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/KellyCriterion.App/KellyCriterion.App.csproj" />
+    <Project Path="src/KellyCriterion.Core/KellyCriterion.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/KellyCriterion.Core.Tests/KellyCriterion.Core.Tests.csproj" />
+  </Folder>
+</Solution>
