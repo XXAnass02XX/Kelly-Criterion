@@ -5,6 +5,7 @@ using KellyCriterion.App.Input;
 using KellyCriterion.App.Services;
 using KellyCriterion.Core.Domain;
 using KellyCriterion.Core.Simulation;
+using KellyCriterion.Core.Strategies;
 
 namespace KellyCriterion.App.ViewModels;
 
@@ -23,6 +24,7 @@ public sealed partial class SimulationSetupViewModel : ObservableValidator
         WinProbability = "0.6";
         PayoutRatio = "1";
         InitialWealth = "100";
+        SelectedStrategy = Strategies[0];
 
         ErrorsChanged += (_, _) =>
         {
@@ -58,10 +60,16 @@ public sealed partial class SimulationSetupViewModel : ObservableValidator
     [CustomValidation(typeof(SimulationSetupViewModel), nameof(ValidateInitialWealth))]
     public partial string InitialWealth { get; set; }
 
+    public IReadOnlyList<IBettingStrategy> Strategies { get; } = [new KellyBettingStrategy(), new HalfKellyStrategy()];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(KellyFractionPreview))]
+    public partial IBettingStrategy SelectedStrategy { get; set; }
+
     [ObservableProperty]
     public partial string? ErrorMessage { get; set; }
 
-    public double? KellyFractionPreview => TryCreateOdds(out var odds) ? KellyFormula.OptimalFraction(odds) : null;
+    public double? KellyFractionPreview => TryCreateOdds(out var odds) ? SelectedStrategy.FractionToWager(odds) : null;
 
     public static ValidationResult? ValidateRuns(string value, ValidationContext context) =>
         ValidateCount(value, SimulationLimits.MaxRuns, "runs", context);
@@ -144,7 +152,7 @@ public sealed partial class SimulationSetupViewModel : ObservableValidator
             || !NumberParser.TryParseDouble(InitialWealth, out var initialWealth) || !TryCreateOdds(out var odds))
             return false;
 
-        parameters = new SimulationParameters(runs, gambles, odds, initialWealth);
+        parameters = new SimulationParameters(runs, gambles, odds, SelectedStrategy, initialWealth);
         return true;
     }
 }

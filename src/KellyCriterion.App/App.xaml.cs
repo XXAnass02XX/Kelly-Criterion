@@ -6,7 +6,6 @@ using KellyCriterion.App.ViewModels;
 using KellyCriterion.App.Views;
 using KellyCriterion.Core.Randomness;
 using KellyCriterion.Core.Simulation;
-using KellyCriterion.Core.Strategies;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace KellyCriterion.App;
@@ -18,21 +17,13 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        ShutdownMode = ShutdownMode.OnExplicitShutdown;
-        var picker = new StrategySelectionWindow();
-        if (picker.ShowDialog() != true)
-        {
-            Shutdown(); //TODO instead of shutting down just ask the user to pick an option
-            return;
-        }
         DispatcherUnhandledException += OnDispatcherUnhandledException;
 
-        _services = ConfigureServices(picker.SelectedStrategy!);
+        _services = ConfigureServices();
         _services.GetRequiredService<INavigationService>().ShowSetup();
+
         MainWindow = _services.GetRequiredService<MainWindow>();
-        
         MainWindow.Show();
-        ShutdownMode = ShutdownMode.OnMainWindowClose;
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -48,9 +39,8 @@ public partial class App : Application
         e.Handled = true;
     }
 
-    private static ServiceProvider ConfigureServices(IBettingStrategy strat) =>
+    private static ServiceProvider ConfigureServices() =>
         new ServiceCollection()
-            .AddSingleton(strat)
             .AddSingleton<IRandomSourceFactory>(_ => new SystemRandomSourceFactory())
             .AddSingleton<IGamblerSimulator, GamblerSimulator>()
             .AddSingleton<INavigationService, NavigationService>()

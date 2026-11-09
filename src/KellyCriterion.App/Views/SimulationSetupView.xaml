@@ -34,6 +34,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <StackPanel Grid.Row="0" Grid.Column="0">
@@ -67,7 +68,21 @@
                         <TextBox Margin="0,0,0,30" Text="{Binding InitialWealth, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
 
-                    <Border Grid.Row="3" Grid.ColumnSpan="3" Background="{StaticResource SoftAccentBrush}"
+                    <StackPanel Grid.Row="3" Grid.ColumnSpan="3">
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="Betting strategy" />
+                        <TextBlock Style="{StaticResource FieldHint}" Text="How much of the portfolio each bet stakes." />
+                        <ComboBox Margin="0,0,0,30"
+                                  ItemsSource="{Binding Strategies}"
+                                  SelectedItem="{Binding SelectedStrategy}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <Border Grid.Row="4" Grid.ColumnSpan="3" Background="{StaticResource SoftAccentBrush}"
                             BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
                             CornerRadius="10" Padding="14,10" Margin="0,0,0,18">
                         <Grid>
@@ -76,8 +91,8 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Text="Kelly fraction" />
-                                <TextBlock Style="{StaticResource StatLabel}" Text="f* = p − (1 − p) / b" />
+                                <TextBlock FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Text="Fraction to wager" />
+                                <TextBlock Style="{StaticResource StatLabel}" Text="{Binding SelectedStrategy.Name}" />
                             </StackPanel>
                             <TextBlock Grid.Column="1" FontSize="26" FontWeight="Bold" VerticalAlignment="Center"
                                        Foreground="{StaticResource AccentGradientBrush}"
@@ -85,10 +100,10 @@
                         </Grid>
                     </Border>
 
-                    <ProgressBar Grid.Row="4" Grid.ColumnSpan="3" Height="4" Margin="0,0,0,12" IsIndeterminate="True"
+                    <ProgressBar Grid.Row="5" Grid.ColumnSpan="3" Height="4" Margin="0,0,0,12" IsIndeterminate="True"
                                  Visibility="{Binding SimulateCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" />
 
-                    <TextBlock Grid.Row="5" Grid.ColumnSpan="3" Margin="0,0,0,12"
+                    <TextBlock Grid.Row="6" Grid.ColumnSpan="3" Margin="0,0,0,12"
                                Foreground="{StaticResource ErrorBrush}" TextWrapping="Wrap"
                                Text="{Binding ErrorMessage}">
                         <TextBlock.Style>
@@ -102,7 +117,7 @@
                         </TextBlock.Style>
                     </TextBlock>
 
-                    <Grid Grid.Row="6" Grid.ColumnSpan="3">
+                    <Grid Grid.Row="7" Grid.ColumnSpan="3">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />

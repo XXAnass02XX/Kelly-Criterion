@@ -4,7 +4,7 @@ using KellyCriterion.Core.Strategies;
 
 namespace KellyCriterion.Core.Simulation;
 
-public sealed class GamblerSimulator(IBettingStrategy strategy, IRandomSourceFactory randomSourceFactory) : IGamblerSimulator
+public sealed class GamblerSimulator(IRandomSourceFactory randomSourceFactory) : IGamblerSimulator
 {
     private const int CancellationCheckMask = 0xFFF;
 
@@ -12,14 +12,14 @@ public sealed class GamblerSimulator(IBettingStrategy strategy, IRandomSourceFac
     {
         ArgumentNullException.ThrowIfNull(parameters);
 
-        var fraction = strategy.FractionToWager(parameters.Odds);
+        var fraction = parameters.Strategy.FractionToWager(parameters.Odds);
         var paths = new double[parameters.Runs][];
         var options = new ParallelOptions { CancellationToken = cancellationToken };
 
         Parallel.For(0, parameters.Runs, options, run =>
             paths[run] = SimulateRun(parameters, fraction, randomSourceFactory.Create(run), cancellationToken));
 
-        return new SimulationResult(parameters, strategy.Name, fraction, paths, ComputeAverage(paths));
+        return new SimulationResult(parameters, parameters.Strategy.Name, fraction, paths, ComputeAverage(paths));
     }
 
     private static double[] SimulateRun(SimulationParameters parameters, double fraction, IRandomSource random, CancellationToken cancellationToken)

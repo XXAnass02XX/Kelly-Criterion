@@ -37,8 +37,8 @@ public class GamblerSimulatorTests
     [Fact]
     public void Simulate_ProducesOnePathPerRun_WithInitialPointIncluded()
     {
-        var simulator = new GamblerSimulator(new KellyBettingStrategy(), new SystemRandomSourceFactory(42));
-        var parameters = new SimulationParameters(7, 25, new GambleOdds(0.6, 1));
+        var simulator = new GamblerSimulator(new SystemRandomSourceFactory(42));
+        var parameters = new SimulationParameters(7, 25, new GambleOdds(0.6, 1), new KellyBettingStrategy());
 
         var result = simulator.Simulate(parameters);
 
@@ -51,11 +51,11 @@ public class GamblerSimulatorTests
     [Fact]
     public void Simulate_WhenAlwaysWinning_CompoundsByOnePlusFractionTimesPayout()
     {
-        var simulator = new GamblerSimulator(new KellyBettingStrategy(), new ConstantRandomFactory(0.0));
+        var simulator = new GamblerSimulator(new ConstantRandomFactory(0.0));
         var odds = new GambleOdds(0.6, 2);
         var fraction = KellyFormula.OptimalFraction(odds);
 
-        var result = simulator.Simulate(new SimulationParameters(3, 10, odds));
+        var result = simulator.Simulate(new SimulationParameters(3, 10, odds, new KellyBettingStrategy()));
 
         var expected = Math.Pow(1 + fraction * 2, 10);
         Assert.All(result.WealthPaths, p => Assert.Equal(expected, p[^1], precision: 10));
@@ -64,9 +64,9 @@ public class GamblerSimulatorTests
     [Fact]
     public void Simulate_WhenAlwaysLosing_ShrinksByOneMinusFraction()
     {
-        var simulator = new GamblerSimulator(new FixedStrategy(0.1), new ConstantRandomFactory(0.999));
+        var simulator = new GamblerSimulator(new ConstantRandomFactory(0.999));
 
-        var result = simulator.Simulate(new SimulationParameters(2, 5, new GambleOdds(0.6, 1)));
+        var result = simulator.Simulate(new SimulationParameters(2, 5, new GambleOdds(0.6, 1), new FixedStrategy(0.1)));
 
         Assert.All(result.WealthPaths, p => Assert.Equal(Math.Pow(0.9, 5), p[^1], precision: 10));
     }
@@ -74,9 +74,9 @@ public class GamblerSimulatorTests
     [Fact]
     public void Simulate_AveragePath_IsPointwiseMeanOfRuns()
     {
-        var simulator = new GamblerSimulator(new FixedStrategy(0.5), new PerRunRandomFactory(run => run == 0 ? 0.0 : 0.999));
+        var simulator = new GamblerSimulator(new PerRunRandomFactory(run => run == 0 ? 0.0 : 0.999));
 
-        var result = simulator.Simulate(new SimulationParameters(2, 1, new GambleOdds(0.5, 1)));
+        var result = simulator.Simulate(new SimulationParameters(2, 1, new GambleOdds(0.5, 1), new FixedStrategy(0.5)));
 
         Assert.Equal((1.5 + 0.5) / 2, result.AverageWealthPath[1], precision: 10);
         Assert.Equal(0.5, result.Summary.ProfitableRunsRatio);
@@ -85,10 +85,10 @@ public class GamblerSimulatorTests
     [Fact]
     public void Simulate_WithSameSeed_IsReproducible()
     {
-        var parameters = new SimulationParameters(5, 100, new GambleOdds(0.55, 1));
+        var parameters = new SimulationParameters(5, 100, new GambleOdds(0.55, 1), new KellyBettingStrategy());
 
-        var first = new GamblerSimulator(new KellyBettingStrategy(), new SystemRandomSourceFactory(7)).Simulate(parameters);
-        var second = new GamblerSimulator(new KellyBettingStrategy(), new SystemRandomSourceFactory(7)).Simulate(parameters);
+        var first = new GamblerSimulator(new SystemRandomSourceFactory(7)).Simulate(parameters);
+        var second = new GamblerSimulator(new SystemRandomSourceFactory(7)).Simulate(parameters);
 
         Assert.Equal(first.AverageWealthPath, second.AverageWealthPath);
     }
@@ -96,11 +96,24 @@ public class GamblerSimulatorTests
     [Fact]
     public void Simulate_WhenCancelled_Throws()
     {
-        var simulator = new GamblerSimulator(new KellyBettingStrategy(), new SystemRandomSourceFactory());
+        var simulator = new GamblerSimulator(new SystemRandomSourceFactory());
         using var cts = new CancellationTokenSource();
         cts.Cancel();
 
         Assert.ThrowsAny<OperationCanceledException>(() =>
-            simulator.Simulate(new SimulationParameters(10, 10, new GambleOdds(0.6, 1)), cts.Token));
+            simulator.Simulate(new SimulationParameters(10, 10, new GambleOdds(0.6, 1), new KellyBettingStrategy()), cts.Token));
+    }
+
+    [Fact]
+    public void Simulate_UsesFractionFromStrategyInParameters()
+    {
+        var simulator = new GamblerSimulator(new ConstantRandomFactory(0.0));
+        var odds = new GambleOdds(0.6, 1);
+
+        var full = simulator.Simulate(new SimulationParameters(1, 1, odds, new KellyBettingStrategy()));
+        var half = simulator.Simulate(new SimulationParameters(1, 1, odds, new HalfKellyStrategy()));
+
+        Assert.Equal(0.2, full.WagerFraction, precision: 10);
+        Assert.Equal(0.1, half.WagerFraction, precision: 10);
     }
 }

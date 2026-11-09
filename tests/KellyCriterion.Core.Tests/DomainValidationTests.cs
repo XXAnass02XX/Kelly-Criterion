@@ -1,4 +1,5 @@
 using KellyCriterion.Core.Domain;
+using KellyCriterion.Core.Strategies;
 
 namespace KellyCriterion.Core.Tests;
 
@@ -24,6 +25,6 @@ public class DomainValidationTests
     [InlineData(SimulationLimits.MaxRuns, SimulationLimits.MaxGamblesPerRun)]
     public void SimulationParameters_RejectsOutOfRangeCounts(int runs, int gambles)
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new SimulationParameters(runs, gambles, new GambleOdds(0.6, 1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new SimulationParameters(runs, gambles, new GambleOdds(0.6, 1), new KellyBettingStrategy()));
     }
 }
