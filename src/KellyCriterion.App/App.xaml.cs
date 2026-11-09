@@ -18,13 +18,21 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
+        var picker = new StrategySelectionWindow();
+        if (picker.ShowDialog() != true)
+        {
+            Shutdown(); //TODO instead of shutting down just ask the user to pick an option
+            return;
+        }
         DispatcherUnhandledException += OnDispatcherUnhandledException;
 
-        _services = ConfigureServices();
+        _services = ConfigureServices(picker.SelectedStrategy!);
         _services.GetRequiredService<INavigationService>().ShowSetup();
-
         MainWindow = _services.GetRequiredService<MainWindow>();
+        
         MainWindow.Show();
+        ShutdownMode = ShutdownMode.OnMainWindowClose;
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -40,9 +48,9 @@ public partial class App : Application
         e.Handled = true;
     }
 
-    private static ServiceProvider ConfigureServices() =>
+    private static ServiceProvider ConfigureServices(IBettingStrategy strat) =>
         new ServiceCollection()
-            .AddSingleton<IBettingStrategy, KellyBettingStrategy>()
+            .AddSingleton(strat)
             .AddSingleton<IRandomSourceFactory>(_ => new SystemRandomSourceFactory())
             .AddSingleton<IGamblerSimulator, GamblerSimulator>()
             .AddSingleton<INavigationService, NavigationService>()
