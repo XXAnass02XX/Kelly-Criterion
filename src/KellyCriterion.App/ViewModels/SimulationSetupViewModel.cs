@@ -102,7 +102,7 @@ public sealed partial class SimulationSetupViewModel : ObservableValidator
         ErrorMessage = null;
         try
         {
-            var result = await Task.Run(() => _simulator.Simulate(parameters, cancellationToken), cancellationToken);
+            var result = await Task.Run(() => _simulator.SimulateWithMedian(parameters, cancellationToken), cancellationToken);
             _navigation.ShowResults(result);
         }
         catch (OperationCanceledException)

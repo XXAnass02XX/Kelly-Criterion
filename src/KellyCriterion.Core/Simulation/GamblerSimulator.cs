@@ -21,6 +21,22 @@ public sealed class GamblerSimulator(IRandomSourceFactory randomSourceFactory) :
 
         return new SimulationResult(parameters, parameters.Strategy.Name, fraction, paths, ComputeAverage(paths));
     }
+    
+    // TODO: Remove this method. It duplicates Simulate and puts the median in the average slot, so the chart loses the average line.
+    // TODO: Instead, add a MedianWealthPath property to SimulationResult and fill it in Simulate with ComputeMedian(paths).
+    public SimulationResult SimulateWithMedian(SimulationParameters parameters, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(parameters);
+
+        var fraction = parameters.Strategy.FractionToWager(parameters.Odds);
+        var paths = new double[parameters.Runs][];
+        var options = new ParallelOptions { CancellationToken = cancellationToken };
+
+        Parallel.For(0, parameters.Runs, options, run =>
+            paths[run] = SimulateRun(parameters, fraction, randomSourceFactory.Create(run), cancellationToken));
+
+        return new SimulationResult(parameters, parameters.Strategy.Name, fraction, paths, ComputeMedian(paths));
+    }
 
     private static double[] SimulateRun(SimulationParameters parameters, double fraction, IRandomSource random, CancellationToken cancellationToken)
     {
@@ -55,5 +71,33 @@ public sealed class GamblerSimulator(IRandomSourceFactory randomSourceFactory) :
             average[i] /= paths.Length;
 
         return average;
+    }
+    static double Median(double[] values)
+    {
+        if (values.Length == 0)
+            throw new ArgumentException("Cannot take the median of an empty array.", nameof(values));
+
+        var sorted = (double[])values.Clone();
+        Array.Sort(sorted);
+
+        int mid = sorted.Length / 2;
+        return sorted.Length % 2 == 1
+            ? sorted[mid]
+            : (sorted[mid - 1] + sorted[mid]) / 2.0;
+    }
+    private static double[] ComputeMedian(double[][] paths)
+    {
+        //TODO optimize me
+        var median = new double[paths[0].Length];
+        var oneStep = new double[paths.Length];
+        for (var i = 0; i < median.Length; i++)
+        {
+            for (var j = 0; j < paths.Length; j++)
+            {
+                oneStep[j] = paths[j][i];
+            }
+            median[i] = Median(oneStep);
+        }
+        return median;
     }
 }

@@ -5,4 +5,5 @@ namespace KellyCriterion.Core.Simulation;
 public interface IGamblerSimulator
 {
     SimulationResult Simulate(SimulationParameters parameters, CancellationToken cancellationToken = default);
+    SimulationResult SimulateWithMedian(SimulationParameters parameters, CancellationToken cancellationToken = default);
 }

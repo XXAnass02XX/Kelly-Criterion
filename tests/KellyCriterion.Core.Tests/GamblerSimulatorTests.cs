@@ -27,6 +27,18 @@ public class GamblerSimulatorTests
         }
     }
 
+    private sealed class SequencePerRunRandomFactory(Func<int, double[]> sequenceForRun) : IRandomSourceFactory
+    {
+        public IRandomSource Create(int runIndex) => new Sequence(sequenceForRun(runIndex));
+
+        private sealed class Sequence(double[] values) : IRandomSource
+        {
+            private int _next;
+
+            public double NextDouble() => values[_next++];
+        }
+    }
+
     private sealed class FixedStrategy(double fraction) : IBettingStrategy
     {
         public string Name => "Fixed";
@@ -45,7 +57,7 @@ public class GamblerSimulatorTests
         Assert.Equal(7, result.WealthPaths.Count);
         Assert.All(result.WealthPaths, p => Assert.Equal(26, p.Length));
         Assert.All(result.WealthPaths, p => Assert.Equal(1.0, p[0]));
-        Assert.Equal(26, result.AverageWealthPath.Length);
+        Assert.Equal(26, result.WealthPath.Length);
     }
 
     [Fact]
@@ -78,19 +90,57 @@ public class GamblerSimulatorTests
 
         var result = simulator.Simulate(new SimulationParameters(2, 1, new GambleOdds(0.5, 1), new FixedStrategy(0.5)));
 
-        Assert.Equal((1.5 + 0.5) / 2, result.AverageWealthPath[1], precision: 10);
+        Assert.Equal((1.5 + 0.5) / 2, result.WealthPath[1], precision: 10);
         Assert.Equal(0.5, result.Summary.ProfitableRunsRatio);
     }
 
     [Fact]
-    public void Simulate_WithSameSeed_IsReproducible()
+    public void SimulateWithMedian_OddRunCount_IsMiddleValueOfRuns()
+    {
+        var simulator = new GamblerSimulator(new PerRunRandomFactory(run => run == 1 ? 0.999 : 0.0));
+
+        var result = simulator.SimulateWithMedian(new SimulationParameters(3, 1, new GambleOdds(0.5, 1), new FixedStrategy(0.5)));
+
+        Assert.Equal(1.0, result.WealthPath[0], precision: 10);
+        Assert.Equal(1.5, result.WealthPath[1], precision: 10);
+    }
+
+    [Fact]
+    public void SimulateWithMedian_EvenRunCount_IsMeanOfTwoMiddleValues()
+    {
+        var sequences = new[]
+        {
+            new[] { 0.0, 0.0 },
+            new[] { 0.0, 0.999 },
+            new[] { 0.999, 0.999 },
+            new[] { 0.0, 0.0 },
+        };
+        var simulator = new GamblerSimulator(new SequencePerRunRandomFactory(run => sequences[run]));
+
+        var result = simulator.SimulateWithMedian(new SimulationParameters(4, 2, new GambleOdds(0.5, 1), new FixedStrategy(0.5)));
+
+        Assert.Equal((0.75 + 2.25) / 2, result.WealthPath[2], precision: 10);
+    }
+
+    [Fact]
+    public void SimulateWithMedian_SingleRun_IsThatRun()
+    {
+        var simulator = new GamblerSimulator(new SystemRandomSourceFactory(3));
+
+        var result = simulator.SimulateWithMedian(new SimulationParameters(1, 20, new GambleOdds(0.6, 1), new KellyBettingStrategy()));
+
+        Assert.Equal(result.WealthPaths[0], result.WealthPath);
+    }
+
+    [Fact]
+    public void SimulateWithMedian_WithSameSeed_IsReproducible()
     {
         var parameters = new SimulationParameters(5, 100, new GambleOdds(0.55, 1), new KellyBettingStrategy());
 
-        var first = new GamblerSimulator(new SystemRandomSourceFactory(7)).Simulate(parameters);
-        var second = new GamblerSimulator(new SystemRandomSourceFactory(7)).Simulate(parameters);
+        var first = new GamblerSimulator(new SystemRandomSourceFactory(7)).SimulateWithMedian(parameters);
+        var second = new GamblerSimulator(new SystemRandomSourceFactory(7)).SimulateWithMedian(parameters);
 
-        Assert.Equal(first.AverageWealthPath, second.AverageWealthPath);
+        Assert.Equal(first.WealthPath, second.WealthPath);
     }
 
     [Fact]
