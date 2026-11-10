@@ -50,6 +50,8 @@
                     <Rectangle Width="7" Height="7" RadiusX="2" RadiusY="2" Fill="#14B8A6" Opacity="0.6" VerticalAlignment="Center" />
                     <TextBlock Margin="6,0,18,0" Style="{StaticResource StatLabel}" Text="Individual runs (50% opacity)" />
                     <Rectangle Width="22" Height="3" Fill="{StaticResource AverageLineBrush}" VerticalAlignment="Center" />
+                    <TextBlock Margin="6,0,18,0" Style="{StaticResource StatLabel}" Text="Average of all runs" />
+                    <Rectangle Width="22" Height="3" Fill="#16A34A" VerticalAlignment="Center" />
                     <TextBlock Margin="6,0,18,0" Style="{StaticResource StatLabel}" Text="Median of all runs" />
                     <Line X1="0" X2="22" Stroke="#94A3B8" StrokeThickness="1.2" StrokeDashArray="3 2" VerticalAlignment="Center" />
                     <TextBlock Margin="6,0,0,0" Style="{StaticResource StatLabel}" Text="Initial portfolio" />
@@ -57,11 +59,13 @@
 
                 <charting:WealthChart Grid.Row="1"
                                       Paths="{Binding WealthPaths}"
-                                      AveragePath="{Binding WealthPath}"
+                                      AveragePath="{Binding AvgWealthPath}"
+                                      MedianPath="{Binding MedianWealthPath}"
                                       IsLogarithmic="{Binding UseLogScale}"
                                       ReferenceValue="{Binding InitialWealth}"
                                       RunOpacity="0.5"
                                       AverageBrush="{StaticResource AverageLineBrush}"
+                                      MedianBrush="{StaticResource MedianLineBrush}"
                                       PlotBackground="{StaticResource PlotBackgroundBrush}"
                                       XAxisTitle="Gamble number"
                                       YAxisTitle="Portfolio value" />
@@ -105,7 +109,7 @@
                         <StackPanel>
                             <TextBlock Style="{StaticResource StatLabel}" Text="Average final portfolio" />
                             <TextBlock Style="{StaticResource StatValue}" Foreground="#BE185D"
-                                       Text="{Binding Summary.FinalWealth, Converter={StaticResource CompactNumber}}" />
+                                       Text="{Binding Summary.AvgFinalWealth, Converter={StaticResource CompactNumber}}" />
                         </StackPanel>
                     </Border>
 

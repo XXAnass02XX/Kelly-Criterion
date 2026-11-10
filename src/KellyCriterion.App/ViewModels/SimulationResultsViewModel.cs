@@ -12,7 +12,9 @@ public sealed partial class SimulationResultsViewModel(SimulationResult result, 
 
     public IReadOnlyList<double[]> WealthPaths => Result.WealthPaths;
 
-    public double[] WealthPath => Result.WealthPath;
+    public double[] AvgWealthPath => Result.AvgWealthPath;
+    
+    public double[] MedianWealthPath => Result.MedianWealthPath;
 
     public SimulationSummary Summary => Result.Summary;
 

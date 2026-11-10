@@ -33,6 +33,10 @@ public sealed class WealthChart : FrameworkElement
     public static readonly DependencyProperty AveragePathProperty = DependencyProperty.Register(
         nameof(AveragePath), typeof(double[]), typeof(WealthChart),
         new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender, OnDataChanged));
+    
+    public static readonly DependencyProperty MedianPathProperty = DependencyProperty.Register(
+        nameof(MedianPath), typeof(double[]), typeof(WealthChart),
+        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender, OnDataChanged));
 
     public static readonly DependencyProperty IsLogarithmicProperty = DependencyProperty.Register(
         nameof(IsLogarithmic), typeof(bool), typeof(WealthChart),
@@ -44,6 +48,10 @@ public sealed class WealthChart : FrameworkElement
 
     public static readonly DependencyProperty AverageBrushProperty = DependencyProperty.Register(
         nameof(AverageBrush), typeof(Brush), typeof(WealthChart),
+        new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
+    
+    public static readonly DependencyProperty MedianBrushProperty = DependencyProperty.Register(
+        nameof(MedianBrush), typeof(Brush), typeof(WealthChart),
         new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
 
     public static readonly DependencyProperty PlotBackgroundProperty = DependencyProperty.Register(
@@ -75,6 +83,12 @@ public sealed class WealthChart : FrameworkElement
         get => (double[]?)GetValue(AveragePathProperty);
         set => SetValue(AveragePathProperty, value);
     }
+    
+    public double[]? MedianPath
+    {
+        get => (double[]?)GetValue(MedianPathProperty);
+        set => SetValue(MedianPathProperty, value);
+    }
 
     public bool IsLogarithmic
     {
@@ -92,6 +106,12 @@ public sealed class WealthChart : FrameworkElement
     {
         get => (Brush)GetValue(AverageBrushProperty);
         set => SetValue(AverageBrushProperty, value);
+    }
+    
+    public Brush MedianBrush
+    {
+        get => (Brush)GetValue(MedianBrushProperty);
+        set => SetValue(MedianBrushProperty, value);
     }
 
     public Brush PlotBackground
@@ -132,7 +152,7 @@ public sealed class WealthChart : FrameworkElement
         if (paths is not { Count: > 0 } || paths[0].Length < 2 || plot.Width < 10 || plot.Height < 10)
             return;
 
-        var range = _cachedRange ??= ComputeRange(paths, AveragePath, IsLogarithmic);
+        var range = _cachedRange ??= ComputeRange(paths, AveragePath, MedianPath, IsLogarithmic);
         IAxisScale yScale = IsLogarithmic
             ? new LogarithmicAxisScale(range.Min, range.Max)
             : new LinearAxisScale(range.Min, range.Max);
@@ -151,6 +171,12 @@ public sealed class WealthChart : FrameworkElement
             dc.DrawGeometry(null, CreatePen(Brushes.White, 0.85, 6), averageGeometry);
             dc.DrawGeometry(null, CreatePen(AverageBrush, 1.0, 2.5), averageGeometry);
         }
+        if (MedianPath is { Length: > 1 } median)
+        {
+            var medianGeometry = BuildGeometry(median, mapper, plot.Width);
+            dc.DrawGeometry(null, CreatePen(Brushes.White, 0.85, 6), medianGeometry);
+            dc.DrawGeometry(null, CreatePen(MedianBrush, 1.0, 2.5), medianGeometry);
+        }
         dc.Pop();
 
         DrawAxisTitles(dc, plot);
@@ -159,7 +185,7 @@ public sealed class WealthChart : FrameworkElement
     private static void OnDataChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) =>
         ((WealthChart)d)._cachedRange = null;
 
-    private static (double Min, double Max) ComputeRange(IReadOnlyList<double[]> paths, double[]? average, bool positiveOnly)
+    private static (double Min, double Max) ComputeRange(IReadOnlyList<double[]> paths, double[]? average, double[]? median, bool positiveOnly)
     {
         var min = double.MaxValue;
         var max = double.MinValue;
@@ -179,6 +205,8 @@ public sealed class WealthChart : FrameworkElement
             Accumulate(path);
         if (average is not null)
             Accumulate(average);
+        if (median is not null)
+            Accumulate(median);
 
         if (min > max)
             return (1, 1);

@@ -19,23 +19,7 @@ public sealed class GamblerSimulator(IRandomSourceFactory randomSourceFactory) :
         Parallel.For(0, parameters.Runs, options, run =>
             paths[run] = SimulateRun(parameters, fraction, randomSourceFactory.Create(run), cancellationToken));
 
-        return new SimulationResult(parameters, parameters.Strategy.Name, fraction, paths, ComputeAverage(paths));
-    }
-    
-    // TODO: Remove this method. It duplicates Simulate and puts the median in the average slot, so the chart loses the average line.
-    // TODO: Instead, add a MedianWealthPath property to SimulationResult and fill it in Simulate with ComputeMedian(paths).
-    public SimulationResult SimulateWithMedian(SimulationParameters parameters, CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(parameters);
-
-        var fraction = parameters.Strategy.FractionToWager(parameters.Odds);
-        var paths = new double[parameters.Runs][];
-        var options = new ParallelOptions { CancellationToken = cancellationToken };
-
-        Parallel.For(0, parameters.Runs, options, run =>
-            paths[run] = SimulateRun(parameters, fraction, randomSourceFactory.Create(run), cancellationToken));
-
-        return new SimulationResult(parameters, parameters.Strategy.Name, fraction, paths, ComputeMedian(paths));
+        return new SimulationResult(parameters, parameters.Strategy.Name, fraction, paths, ComputeAverage(paths), ComputeMedian(paths));
     }
 
     private static double[] SimulateRun(SimulationParameters parameters, double fraction, IRandomSource random, CancellationToken cancellationToken)
