@@ -13,6 +13,8 @@ public sealed partial class SimulationSetupViewModel : ObservableValidator
 {
     private readonly IGamblerSimulator _simulator;
     private readonly INavigationService _navigation;
+    [ObservableProperty]
+    public partial int Progress { get; set; }
 
     public SimulationSetupViewModel(IGamblerSimulator simulator, INavigationService navigation)
     {
@@ -100,9 +102,11 @@ public sealed partial class SimulationSetupViewModel : ObservableValidator
             return;
 
         ErrorMessage = null;
+        Progress = 0;
+        var progress = new Progress<int>(percent => Progress = percent);
         try
         {
-            var result = await Task.Run(() => _simulator.Simulate(parameters, cancellationToken), cancellationToken);
+            var result = await Task.Run(() => _simulator.Simulate(parameters, progress, cancellationToken), cancellationToken);
             _navigation.ShowResults(result);
         }
         catch (OperationCanceledException)

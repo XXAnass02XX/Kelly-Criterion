@@ -100,9 +100,14 @@
                         </Grid>
                     </Border>
 
-                    <ProgressBar Grid.Row="5" Grid.ColumnSpan="3" Height="4" Margin="0,0,0,12" IsIndeterminate="True"
-                                 Visibility="{Binding SimulateCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" />
-
+                    <!--ProgressBar Grid.Row="5" Grid.ColumnSpan="3" Height="4" Margin="0,0,0,12" IsIndeterminate="True"
+                                 Visibility="{Binding SimulateCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" /-->
+                    
+                    <Grid Grid.Row="5" Grid.ColumnSpan="3" Height="20" Margin="0,0,0,12">
+                        <Rectangle Fill="DarkBlue" Stroke="Navy" StrokeThickness="2" RadiusX="8" RadiusY="8" />
+                        <TextBlock Text="{Binding Progress , StringFormat={}{0} %}" Foreground="Red" Margin="10,1,0,0" />
+                    </Grid>
+                    
                     <TextBlock Grid.Row="6" Grid.ColumnSpan="3" Margin="0,0,0,12"
                                Foreground="{StaticResource ErrorBrush}" TextWrapping="Wrap"
                                Text="{Binding ErrorMessage}">

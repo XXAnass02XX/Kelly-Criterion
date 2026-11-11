@@ -153,7 +153,7 @@ public class GamblerSimulatorTests
         cts.Cancel();
 
         Assert.ThrowsAny<OperationCanceledException>(() =>
-            simulator.Simulate(new SimulationParameters(10, 10, new GambleOdds(0.6, 1), new KellyBettingStrategy()), cts.Token));
+            simulator.Simulate(new SimulationParameters(10, 10, new GambleOdds(0.6, 1), new KellyBettingStrategy()), cancellationToken: cts.Token));
     }
 
     [Fact]
@@ -167,5 +167,38 @@ public class GamblerSimulatorTests
 
         Assert.Equal(0.2, full.WagerFraction, precision: 10);
         Assert.Equal(0.1, half.WagerFraction, precision: 10);
+    }
+
+    // Progress<T> would post callbacks to the thread pool in a test, so assertions could run before they arrive.
+    private sealed class RecordingProgress : IProgress<int>
+    {
+        private readonly Lock _gate = new();
+        private readonly List<int> _values = [];
+
+        public IReadOnlyList<int> Values
+        {
+            get { lock (_gate) return [.. _values]; }
+        }
+
+        public void Report(int value)
+        {
+            lock (_gate) _values.Add(value);
+        }
+    }
+
+    [Fact]
+    public void Simulate_ReportsStrictlyIncreasingPercentagesEndingAt100()
+    {
+        var simulator = new GamblerSimulator(new SystemRandomSourceFactory(1));
+        var progress = new RecordingProgress();
+
+        simulator.Simulate(new SimulationParameters(300, 500, new GambleOdds(0.6, 1), new KellyBettingStrategy()), progress);
+
+        var values = progress.Values;
+        Assert.NotEmpty(values);
+        Assert.Equal(100, values[^1]);
+        Assert.All(values, v => Assert.InRange(v, 0, 100));
+        for (var i = 1; i < values.Count; i++)
+            Assert.True(values[i] > values[i - 1], $"Progress went from {values[i - 1]} to {values[i]}.");
     }
 }
