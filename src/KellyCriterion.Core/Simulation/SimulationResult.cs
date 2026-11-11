@@ -7,10 +7,10 @@ public sealed record SimulationResult(
     string StrategyName,
     double WagerFraction,
     IReadOnlyList<double[]> WealthPaths,
-    double[] AvgWealthPath,
+    double[] AverageWealthPath,
     double[] MedianWealthPath)
 {
-    public SimulationSummary Summary { get; } = SimulationSummary.From(Parameters, WealthPaths, AvgWealthPath, MedianWealthPath);
+    public SimulationSummary Summary { get; } = SimulationSummary.From(Parameters, WealthPaths, AverageWealthPath, MedianWealthPath);
 
     public double ExpectedLogGrowthPerGamble => KellyFormula.ExpectedLogGrowth(Parameters.Odds, WagerFraction);
 }

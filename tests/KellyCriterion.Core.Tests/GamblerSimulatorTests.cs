@@ -57,7 +57,7 @@ public class GamblerSimulatorTests
         Assert.Equal(7, result.WealthPaths.Count);
         Assert.All(result.WealthPaths, p => Assert.Equal(26, p.Length));
         Assert.All(result.WealthPaths, p => Assert.Equal(1.0, p[0]));
-        Assert.Equal(26, result.AvgWealthPath.Length);
+        Assert.Equal(26, result.AverageWealthPath.Length);
         Assert.Equal(26, result.MedianWealthPath.Length);
     }
 
@@ -91,7 +91,7 @@ public class GamblerSimulatorTests
 
         var result = simulator.Simulate(new SimulationParameters(2, 1, new GambleOdds(0.5, 1), new FixedStrategy(0.5)));
 
-        Assert.Equal((1.5 + 0.5) / 2, result.AvgWealthPath[1], precision: 10);
+        Assert.Equal((1.5 + 0.5) / 2, result.AverageWealthPath[1], precision: 10);
         Assert.Equal(0.5, result.Summary.ProfitableRunsRatio);
     }
 
@@ -141,7 +141,7 @@ public class GamblerSimulatorTests
         var first = new GamblerSimulator(new SystemRandomSourceFactory(7)).Simulate(parameters);
         var second = new GamblerSimulator(new SystemRandomSourceFactory(7)).Simulate(parameters);
 
-        Assert.Equal(first.AvgWealthPath, second.AvgWealthPath);
+        Assert.Equal(first.AverageWealthPath, second.AverageWealthPath);
         Assert.Equal(first.MedianWealthPath, second.MedianWealthPath);
     }
 

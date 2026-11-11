@@ -56,32 +56,28 @@ public sealed class GamblerSimulator(IRandomSourceFactory randomSourceFactory) :
 
         return average;
     }
-    static double Median(double[] values)
-    {
-        if (values.Length == 0)
-            throw new ArgumentException("Cannot take the median of an empty array.", nameof(values));
 
-        var sorted = (double[])values.Clone();
-        Array.Sort(sorted);
-
-        int mid = sorted.Length / 2;
-        return sorted.Length % 2 == 1
-            ? sorted[mid]
-            : (sorted[mid - 1] + sorted[mid]) / 2.0;
-    }
     private static double[] ComputeMedian(double[][] paths)
     {
-        //TODO optimize me
         var median = new double[paths[0].Length];
-        var oneStep = new double[paths.Length];
+        var valuesAtStep = new double[paths.Length];
         for (var i = 0; i < median.Length; i++)
         {
-            for (var j = 0; j < paths.Length; j++)
-            {
-                oneStep[j] = paths[j][i];
-            }
-            median[i] = Median(oneStep);
+            for (var run = 0; run < paths.Length; run++)
+                valuesAtStep[run] = paths[run][i];
+
+            median[i] = SortAndTakeMedian(valuesAtStep);
         }
+
         return median;
+    }
+
+    private static double SortAndTakeMedian(double[] values)
+    {
+        Array.Sort(values);
+        var mid = values.Length / 2;
+        return values.Length % 2 == 1
+            ? values[mid]
+            : (values[mid - 1] + values[mid]) / 2;
     }
 }
