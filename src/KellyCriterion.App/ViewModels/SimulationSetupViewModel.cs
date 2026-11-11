@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using KellyCriterion.App.Input;
@@ -108,6 +109,9 @@ public sealed partial class SimulationSetupViewModel : ObservableValidator
         {
             var result = await Task.Run(() => _simulator.Simulate(parameters, progress, cancellationToken),
                 cancellationToken);
+
+            // Building the chart blocks the UI thread; yielding below Render priority lets "Plotting the graph…" be drawn first.
+            await Dispatcher.Yield(DispatcherPriority.Background);
             _navigation.ShowResults(result);
         }
         catch (OperationCanceledException)

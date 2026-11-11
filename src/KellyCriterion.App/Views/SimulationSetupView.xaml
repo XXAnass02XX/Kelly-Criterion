@@ -110,6 +110,13 @@
                                             <DataTrigger Binding="{Binding SimulateCommand.IsRunning}" Value="True">
                                                 <Setter Property="Text" Value="Simulating…" />
                                             </DataTrigger>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding SimulateCommand.IsRunning}" Value="True" />
+                                                    <Condition Binding="{Binding Progress}" Value="100" />
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Text" Value="Plotting the graph…" />
+                                            </MultiDataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </TextBlock.Style>
