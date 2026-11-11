@@ -106,7 +106,8 @@ public sealed partial class SimulationSetupViewModel : ObservableValidator
         var progress = new Progress<int>(percent => Progress = percent);
         try
         {
-            var result = await Task.Run(() => _simulator.Simulate(parameters, progress, cancellationToken), cancellationToken);
+            var result = await Task.Run(() => _simulator.Simulate(parameters, progress, cancellationToken),
+                cancellationToken);
             _navigation.ShowResults(result);
         }
         catch (OperationCanceledException)
@@ -116,6 +117,10 @@ public sealed partial class SimulationSetupViewModel : ObservableValidator
         catch (OutOfMemoryException)
         {
             ErrorMessage = "Not enough memory for this simulation. Reduce the number of runs or gambles.";
+        }
+        finally
+        {
+            Progress = 0;
         }
     }
 

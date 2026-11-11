@@ -100,14 +100,27 @@
                         </Grid>
                     </Border>
 
-                    <!--ProgressBar Grid.Row="5" Grid.ColumnSpan="3" Height="4" Margin="0,0,0,12" IsIndeterminate="True"
-                                 Visibility="{Binding SimulateCommand.IsRunning, Converter={StaticResource BoolToVisibility}}" /-->
-                    
-                    <Grid Grid.Row="5" Grid.ColumnSpan="3" Height="20" Margin="0,0,0,12">
-                        <Rectangle Fill="DarkBlue" Stroke="Navy" StrokeThickness="2" RadiusX="8" RadiusY="8" />
-                        <TextBlock Text="{Binding Progress , StringFormat={}{0} %}" Foreground="Red" Margin="10,1,0,0" />
-                    </Grid>
-                    
+                    <StackPanel Grid.Row="5" Grid.ColumnSpan="3" Margin="0,0,0,16">
+                        <Grid Margin="0,0,0,6">
+                            <TextBlock>
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource StatLabel}">
+                                        <Setter Property="Text" Value="Press Simulate to start" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SimulateCommand.IsRunning}" Value="True">
+                                                <Setter Property="Text" Value="Simulating…" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <TextBlock HorizontalAlignment="Right" FontSize="12" FontWeight="SemiBold"
+                                       Foreground="{StaticResource AccentBrush}"
+                                       Text="{Binding Progress, StringFormat={}{0} %}" />
+                        </Grid>
+                        <ProgressBar Minimum="0" Maximum="100" Value="{Binding Progress, Mode=OneWay}" />
+                    </StackPanel>
+
                     <TextBlock Grid.Row="6" Grid.ColumnSpan="3" Margin="0,0,0,12"
                                Foreground="{StaticResource ErrorBrush}" TextWrapping="Wrap"
                                Text="{Binding ErrorMessage}">

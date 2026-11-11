@@ -319,8 +319,21 @@
     </Style>
 
     <Style TargetType="ProgressBar">
-        <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
-        <Setter Property="Background" Value="#E0E7FF" />
+        <Setter Property="Foreground" Value="{StaticResource AccentGradientBrush}" />
+        <Setter Property="Background" Value="{StaticResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Height" Value="8" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <!-- ProgressBar sizes the element named PART_Indicator from Value/Minimum/Maximum and PART_Track's width. -->
+                <ControlTemplate TargetType="ProgressBar">
+                    <Grid>
+                        <Border x:Name="PART_Track" CornerRadius="4" Background="{TemplateBinding Background}" />
+                        <Border x:Name="PART_Indicator" CornerRadius="4" HorizontalAlignment="Left"
+                                Background="{TemplateBinding Foreground}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 </ResourceDictionary>
